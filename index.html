@@ -16,7 +16,7 @@
                 
                 if (datos.comando === "INICIAR_DESENCRIPTADO") {
                     // 1. Descargamos el bloque de texto encriptado (que subirás a GitHub)
-                    let respuesta = await fetch("reproductor_real.enc?t=" + new Date().getTime());
+                    let respuesta = await fetch(datos.archivo_objetivo + "?t=" + new Date().getTime());
                     let textoEncriptado = await respuesta.text();
 
                     // 2. Usamos la llave que nos mandó la App para desencriptar
