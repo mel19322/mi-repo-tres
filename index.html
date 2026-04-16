@@ -1,1 +1,51 @@
-index
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cargando...</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body style="background: #000; color: #fff; text-align: center; padding-top: 20%;">
+    <h2>Iniciando Motor Seguro...</h2>
+
+    <script>
+        // Escuchamos el mensaje secreto que enviará la app móvil
+        window.addEventListener("message", async function(event) {
+            try {
+                let datos = JSON.parse(event.data);
+                
+                if (datos.comando === "INICIAR_DESENCRIPTADO") {
+                    // 1. Descargamos el bloque de texto encriptado (que subirás a GitHub)
+                    let respuesta = await fetch("reproductor_real.enc?t=" + new Date().getTime());
+                    let textoEncriptado = await respuesta.text();
+
+                    // 2. Usamos la llave que nos mandó la App para desencriptar
+                    let llave = CryptoJS.enc.Utf8.parse(datos.llave_aes);
+                    let vector = CryptoJS.enc.Utf8.parse(datos.vector_aes);
+
+                    let desencriptado = CryptoJS.AES.decrypt(textoEncriptado.trim(), llave, {
+                        iv: vector,
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+
+                    let htmlReal = desencriptado.toString(CryptoJS.enc.Utf8);
+                    
+                    if (!htmlReal) throw new Error("Llave incorrecta");
+
+                    // 3. Inyectamos el ID del dispositivo en el código real
+                    window.ID_DISPOSITIVO_REAL = datos.id_dispositivo;
+                    htmlReal = htmlReal.replace("[MI_ID_SECRETO]", datos.id_dispositivo);
+
+                    // 4. Reemplazamos esta página en blanco por el reproductor real
+                    document.open();
+                    document.write(htmlReal);
+                    document.close();
+                }
+            } catch (e) {
+                document.body.innerHTML = "<h3 style='color:red;'>Acceso Denegado / Error de Llave</h3>";
+            }
+        });
+    </script>
+</body>
+</html>
